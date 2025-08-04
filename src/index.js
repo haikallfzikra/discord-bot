@@ -68,9 +68,9 @@ client.on('messageCreate', async message => {
       console.error('❌ Error ambil jokes:', err);
       message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
     }
-  } else if (message.content === '!help') {
+  } else if (message.content === '!tolong') {
     message.reply('Gunakan !ping untuk balasan cepat, !jokes untuk mendapatkan gambar jokes, atau !help untuk bantuan.');
-  } else if (message.content === '!info') {
+  } else if (message.content === '!inpo') {
     message.reply('Bot ini dibuat untuk memberikan balasan cepat dan gambar lucu. Gunakan perintah yang tersedia untuk berinteraksi!');
   } else if (message.content === '!canda') {
       const imageUrl = await candaFunction();
