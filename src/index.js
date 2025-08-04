@@ -25,8 +25,7 @@ client.on('messageCreate', async message => {
       const imageUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
       const attachment = new AttachmentBuilder(imageUrl, { name: 'jokesbapak.jpg' });
       await message.channel.send({
-        content: '🤣 Jokes Bapak-Bapak\nPowered by jokesbapak2.reinaldyrafli.com',
-        files: [attachment],
+        files: [attachment]
       });
 
     } catch (err) {
