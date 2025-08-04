@@ -23,15 +23,15 @@ client.on('messageCreate', async message => {
     message.reply('Pong!');
   } else if (message.content === '!jokes') {
     try {
-      const imageUrl = 'https://jokesbapak2.reinaldyrafli.com/api/';
-
+      const imageUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
+          
       const embed = new EmbedBuilder()
         .setTitle('🤣 Jokes Bapak-Bapak')
         .setImage(imageUrl)
         .setColor('#ffaa00')
         .setFooter({ text: 'Powered by jokesbapak2.reinaldyrafli.com' })
         .setTimestamp();
-
+          
       await message.channel.send({ embeds: [embed] });
     } catch (err) {
       console.error('❌ Error ambil jokes:', err);
