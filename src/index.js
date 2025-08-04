@@ -47,11 +47,7 @@ const textFunction = async () => {
     const response = await axios.get(data);
     const text = response.data.message;
 
-    if (!text) {
-      await message.reply('Teks kosong diterima. Coba lagi nanti.');
-      return;
-    }
-    await message.reply(text);
+    return text;
   } catch (err) {
     console.error('Error ambil teks:', err);
     await message.reply('Gagal ambil teks. Coba lagi nanti ya.');
@@ -62,12 +58,9 @@ client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
   if (message.content === '!text') {
-    try {
-      await textFunction();
-    } catch (err) {
-      console.error('Error ambil teks:', err);
-      message.reply('Gagal ambil teks. Coba lagi nanti ya.');
-    }
+    const text = await textFunction();
+    message.reply(text);
+    
   } else if (message.content === '!jokes') {
     try {
       const imageUrl = await jokesFunction();
