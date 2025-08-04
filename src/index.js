@@ -23,7 +23,7 @@ client.on('messageCreate', async message => {
     const data = 'https://candaan-api.vercel.app/api/text/random';
     try {
       const response = await axios.get(data);
-      const text = response.data.data.text;
+      const text = response.data.data.url;
       message.reply(text);
     } catch (err) {
       console.error('Error ambil teks:', err);
