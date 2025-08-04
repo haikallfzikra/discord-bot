@@ -16,6 +16,21 @@ client.once('ready', () => {
   console.log(`✅ Bot aktif sebagai ${client.user.tag}`);
 });
 
+
+const candaFunction = async () => {
+  try {
+    const apiUrl = "https://candaan-api.vercel.app/api/image/random";
+    const response = await axios.get(apiUrl);
+
+    const imageUrl = response.data.data.url;
+
+    return imageUrl;
+  } catch (err) {
+    console.error('❌ Error ambil jokes:', err);
+    return '⚠️ Gagal ambil jokes. Coba lagi nanti ya.';
+  }
+};
+
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
@@ -47,21 +62,11 @@ client.on('messageCreate', async message => {
   } else if (message.content === '!info') {
     message.reply('Bot ini dibuat untuk memberikan balasan cepat dan gambar lucu. Gunakan perintah yang tersedia untuk berinteraksi!');
   } else if (message.content === '!canda') {
-    try {
-      const apiUrl = "https://candaan-api.vercel.app/api/image/random";
-      const response = await axios.get(apiUrl);
-
-      const imageUrl = response.data.data.url;
-
+      const imageUrl = await candaFunction();
       const attachment = new AttachmentBuilder(imageUrl, { name: 'canda.jpg' });
       await message.channel.send({
         files: [attachment]
       });
-
-    } catch (err) {
-      console.error('❌ Error ambil jokes:', err);
-      message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
-    }
   }
 });
 
