@@ -3,7 +3,7 @@
 Bot sederhana untuk membalas teks dan gambar candaan di Discord menggunakan Discord.js v14.
 
 ## 📁 Struktur Folder
-.
+```bash
 ├── .git/ # Folder git repository
 ├── node_modules/ # Dependency project (hasil npm install)
 ├── src/ # Source code bot (index.js, command, dll)
@@ -11,6 +11,12 @@ Bot sederhana untuk membalas teks dan gambar candaan di Discord menggunakan Disc
 ├── .gitignore # File konfigurasi Git Ignore
 ├── package.json # Konfigurasi project npm
 ├── package-lock.json # Lockfile npm
+```
+
+shell
+Copy
+Edit
+
 
 ## ⚙️ Cara Menjalankan
 
