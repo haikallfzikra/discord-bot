@@ -1,6 +1,5 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 require('dotenv').config();
-
 
 const client = new Client({
   intents: [
@@ -24,15 +23,12 @@ client.on('messageCreate', async message => {
   } else if (message.content === '!jokes') {
     try {
       const imageUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
-          
-      const embed = new EmbedBuilder()
-        .setTitle('🤣 Jokes Bapak-Bapak')
-        .setImage(imageUrl)
-        .setColor('#ffaa00')
-        .setFooter({ text: 'Powered by jokesbapak2.reinaldyrafli.com' })
-        .setTimestamp();
-          
-      await message.channel.send({ embeds: [embed] });
+      const attachment = new AttachmentBuilder(imageUrl, { name: 'jokesbapak.jpg' });
+      await message.channel.send({
+        content: '🤣 Jokes Bapak-Bapak\nPowered by jokesbapak2.reinaldyrafli.com',
+        files: [attachment],
+      });
+
     } catch (err) {
       console.error('❌ Error ambil jokes:', err);
       message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
@@ -40,5 +36,5 @@ client.on('messageCreate', async message => {
   }
 });
 
-
 client.login(TOKEN);
+
