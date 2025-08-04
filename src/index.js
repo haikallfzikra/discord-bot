@@ -26,8 +26,22 @@ const candaFunction = async () => {
 
     return imageUrl;
   } catch (err) {
-    console.error('❌ Error ambil jokes:', err);
-    return '⚠️ Gagal ambil jokes. Coba lagi nanti ya.';
+    console.error('Error ambil jokes:', err);
+    return 'Gagal ambil jokes. Coba lagi nanti ya.';
+  }
+};
+
+const jokesFunction = async () => {
+  try {
+    const apiUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
+    const response = await axios.get(apiUrl);
+
+    const imageUrl = response.data.data.url;
+
+    return imageUrl;
+  } catch (err) {
+    console.error('Error ambil jokes:', err);
+    return 'Gagal ambil jokes. Coba lagi nanti ya.';
   }
 };
 
@@ -46,20 +60,14 @@ client.on('messageCreate', async message => {
     }
 
   } else if (message.content === '!jokes') {
-    try {
-      const imageUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
-      const attachment = new AttachmentBuilder(imageUrl, { name: 'jokesbapak.jpg' });
-      await message.channel.send({
-        files: [attachment]
-      });
-
-    } catch (err) {
-      console.error('❌ Error ambil jokes:', err);
-      message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
-    }
-  } else if (message.content === '!help') {
+    const imageUrl = await jokesFunction();
+    const attachment = new AttachmentBuilder(imageUrl, { name: 'jokes.jpg' });
+    await message.channel.send({
+      files: [attachment]
+    });
+  } else if (message.content === '!tolong') {
     message.reply('Gunakan !ping untuk balasan cepat, !jokes untuk mendapatkan gambar jokes, atau !help untuk bantuan.');
-  } else if (message.content === '!info') {
+  } else if (message.content === '!inpo') {
     message.reply('Bot ini dibuat untuk memberikan balasan cepat dan gambar lucu. Gunakan perintah yang tersedia untuk berinteraksi!');
   } else if (message.content === '!canda') {
       const imageUrl = await candaFunction();
