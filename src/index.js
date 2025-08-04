@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 
 
@@ -17,13 +17,22 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async message => {
+  if (message.author.bot) return;
+
   if (message.content === '!ping') {
     message.reply('Pong!');
   } else if (message.content === '!jokes') {
     try {
-      const res = await fetch('https://jokesbapak2.reinaldyrafli.com/api/');
-      const data = await res.json();
-      message.reply(data.joke || '😅 Waduh, jokes-nya ngilang...');
+      const imageUrl = 'https://jokesbapak2.reinaldyrafli.com/api/';
+
+      const embed = new EmbedBuilder()
+        .setTitle('🤣 Jokes Bapak-Bapak')
+        .setImage(imageUrl)
+        .setColor('#ffaa00')
+        .setFooter({ text: 'Powered by jokesbapak2.reinaldyrafli.com' })
+        .setTimestamp();
+
+      await message.channel.send({ embeds: [embed] });
     } catch (err) {
       console.error('❌ Error ambil jokes:', err);
       message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
