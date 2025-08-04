@@ -13,7 +13,7 @@ const client = new Client({
 const TOKEN = process.env.TOKEN;
 
 client.once('ready', () => {
-  console.log(`✅ Bot aktif sebagai ${client.user.tag}`);
+  console.log(`Bot aktif sebagai ${client.user.tag}`);
 });
 
 
@@ -26,8 +26,8 @@ const candaFunction = async () => {
 
     return imageUrl;
   } catch (err) {
-    console.error('❌ Error ambil jokes:', err);
-    return '⚠️ Gagal ambil jokes. Coba lagi nanti ya.';
+    console.error('Error ambil jokes:', err);
+    return 'Gagal ambil jokes. Coba lagi nanti ya.';
   }
 };
 
@@ -36,8 +36,8 @@ const jokesFunction = async () => {
     const apiUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
     return apiUrl;
   } catch (err) {
-    console.error('❌ Error ambil jokes:', err);
-    return '⚠️ Gagal ambil jokes. Coba lagi nanti ya.';
+    console.error('Error ambil jokes:', err);
+    return 'Gagal ambil jokes. Coba lagi nanti ya.';
   }
 };
 
@@ -65,8 +65,8 @@ client.on('messageCreate', async message => {
       });
 
     } catch (err) {
-      console.error('❌ Error ambil jokes:', err);
-      message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
+      console.error('Error ambil jokes:', err);
+      message.reply('Gagal ambil jokes. Coba lagi nanti ya.');
     }
   } else if (message.content === '!tolong') {
     message.reply('Gunakan !ping untuk balasan cepat, !jokes untuk mendapatkan gambar jokes, atau !help untuk bantuan.');
