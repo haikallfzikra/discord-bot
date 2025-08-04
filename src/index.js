@@ -19,8 +19,17 @@ client.once('ready', () => {
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
-  if (message.content === '!ping') {
-    message.reply('Pong!');
+  if (message.content === '!text') {
+    const data = 'https://candaan-api.vercel.app/api/text/random';
+    try {
+      const response = await axios.get(data);
+      const text = response.data.data.text;
+      message.reply(text);
+    } catch (err) {
+      console.error('Error ambil teks:', err);
+      message.reply('Gagal ambil teks. Coba lagi nanti ya.');
+    }
+
   } else if (message.content === '!jokes') {
     try {
       const imageUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
@@ -41,15 +50,14 @@ client.on('messageCreate', async message => {
     try {
       const apiUrl = "https://candaan-api.vercel.app/api/image/random";
       const response = await axios.get(apiUrl);
-    
+
       const imageUrl = response.data.data.url;
-    
+
       const attachment = new AttachmentBuilder(imageUrl, { name: 'canda.jpg' });
       await message.channel.send({
-        content: '😆 Candaan random dari candaan-api',
         files: [attachment]
       });
-    
+
     } catch (err) {
       console.error('❌ Error ambil jokes:', err);
       message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
