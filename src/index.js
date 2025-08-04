@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 require('dotenv').config();
+const axios = require('axios');
 
 const client = new Client({
   intents: [
@@ -38,21 +39,22 @@ client.on('messageCreate', async message => {
     message.reply('Bot ini dibuat untuk memberikan balasan cepat dan gambar lucu. Gunakan perintah yang tersedia untuk berinteraksi!');
   } else if (message.content === '!canda') {
     try {
-      const fetch = "https://candaan-api.vecel.app/api/image/random";
-      const response = await fetch(fetch);
-      const data = await response.json(); 
-      const imageUrl = data.data.url;
-
+      const apiUrl = "https://candaan-api.vercel.app/api/image/random";
+      const response = await axios.get(apiUrl);
+    
+      const imageUrl = response.data.data.url;
+    
       const attachment = new AttachmentBuilder(imageUrl, { name: 'canda.jpg' });
       await message.channel.send({
+        content: '😆 Candaan random dari candaan-api',
         files: [attachment]
       });
-
+    
     } catch (err) {
       console.error('❌ Error ambil jokes:', err);
       message.reply('⚠️ Gagal ambil jokes. Coba lagi nanti ya.');
     }
-  }  
+  }
 });
 
 client.login(TOKEN);
