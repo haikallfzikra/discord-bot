@@ -60,6 +60,7 @@ client.on('messageCreate', async message => {
       const imageUrl = await jokesFunction();
       const attachment = new AttachmentBuilder(imageUrl, { name: 'jokesbapak.jpg' });
       await message.channel.send({
+        content: 'Berikut adalah gambar jokes bapack:',
         files: [attachment]
       });
 
@@ -75,6 +76,7 @@ client.on('messageCreate', async message => {
       const imageUrl = await candaFunction();
       const attachment = new AttachmentBuilder(imageUrl, { name: 'canda.jpg' });
       await message.channel.send({
+        content: 'Berikut adalah gambar jokes biasa:',
         files: [attachment]
       });
   }
