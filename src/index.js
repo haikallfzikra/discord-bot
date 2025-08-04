@@ -42,15 +42,19 @@ const jokesFunction = async () => {
 };
 
 const textFunction = async () => {
-  const data = 'https://candaan-api.vercel.app/api/text/random';
+  const url = 'https://candaan-api.vercel.app/api/text/random';
   try {
-    const response = await axios.get(data);
+    const response = await axios.get(url);
     const text = response.data.message;
+
+    if (!text || typeof text !== 'string') {
+      return null;
+    }
 
     return text;
   } catch (err) {
     console.error('Error ambil teks:', err);
-    await message.reply('Gagal ambil teks. Coba lagi nanti ya.');
+    return null;
   }
 };
 
@@ -59,8 +63,12 @@ client.on('messageCreate', async message => {
 
   if (message.content === '!text') {
     const text = await textFunction();
-    message.reply(text);
-    
+
+    if (text) {
+      await message.reply(text);
+    } else {
+     await message.reply('⚠️ Gagal ambil teks. Coba lagi nanti ya.');
+    }
   } else if (message.content === '!jokes') {
     try {
       const imageUrl = await jokesFunction();
