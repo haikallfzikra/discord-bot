@@ -38,7 +38,11 @@ client.on('messageCreate', async message => {
     message.reply('Bot ini dibuat untuk memberikan balasan cepat dan gambar lucu. Gunakan perintah yang tersedia untuk berinteraksi!');
   } else if (message.content === '!canda') {
     try {
-      const imageUrl = `https://candaan-api.vecel.app/api/image/random`;
+      const fetch = "https://candaan-api.vecel.app/api/image/random";
+      const response = await fetch(fetch);
+      const data = await response.json(); 
+      const imageUrl = data.data.url;
+
       const attachment = new AttachmentBuilder(imageUrl, { name: 'canda.jpg' });
       await message.channel.send({
         files: [attachment]
