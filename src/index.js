@@ -45,7 +45,7 @@ const textFunction = async () => {
   const url = 'https://candaan-api.vercel.app/api/text/random';
   try {
     const response = await axios.get(url);
-    const text = response.data;
+    const text = response.data.data;
 
     console.log('Teks yang diambil:', text);
     
