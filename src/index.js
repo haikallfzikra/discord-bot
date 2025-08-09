@@ -99,36 +99,36 @@ client.on('interactionCreate', async interaction => {
 
       // === Command musik ===
       case 'play':
-        const url = interaction.options.getString('url');
-        if (!url) return interaction.reply('❌ Masukkan URL atau nama lagu.');
+          const query = interaction.options.getString('url');
+          if (!query) return interaction.reply('❌ Masukkan URL atau nama lagu.');
+      
+          if (!interaction.member.voice.channel) {
+              return interaction.reply('❌ Kamu harus berada di voice channel.');
+          }
+        
+          await interaction.deferReply();
+        
+          const searchResult = await player.search(query, {
+              requestedBy: interaction.user
+          });
+        
+          if (!searchResult || !searchResult.tracks.length) {
+              return interaction.editReply('❌ Lagu tidak ditemukan.');
+          }
+        
+          const queue = player.nodes.create(interaction.guild, {
+              metadata: interaction.channel
+          });
 
-        if (!interaction.member.voice.channel) {
-          return interaction.reply('❌ Kamu harus berada di voice channel.');
-        }
-
-        await interaction.deferReply();
-        const searchResult = await player.search(url, { requestedBy: interaction.user });
-
-        if (!searchResult || !searchResult.tracks.length) {
-          return interaction.editReply('❌ Lagu tidak ditemukan.');
-        }
-
-        const queue = await player.createQueue(interaction.guild, {
-          metadata: interaction.channel
-        });
-
-        try {
-          if (!queue.connection) await queue.connect(interaction.member.voice.channel);
-        } catch {
-          queue.destroy();
-          return interaction.editReply('❌ Gagal masuk ke voice channel.');
-        }
-
-        queue.addTrack(searchResult.tracks[0]);
-        if (!queue.playing) await queue.play();
-
-        interaction.editReply(`✅ Ditambahkan ke antrian: **${searchResult.tracks[0].title}**`);
-        break;
+          try {
+              if (!queue.connection) await queue.connect(interaction.member.voice.channel);
+          } catch {
+              queue.delete();
+              return interaction.editReply('❌ Gagal masuk ke voice channel.');
+          }
+          queue.addTrack(searchResult.tracks[0]);
+          if (!queue.isPlaying()) await queue.node.play();
+          return interaction.editReply(`✅ Ditambahkan ke antrian: **${searchResult.tracks[0].title}**`);
 
       case 'skip':
         const currentQueue = player.getQueue(interaction.guild.id);
