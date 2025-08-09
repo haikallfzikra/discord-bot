@@ -1,21 +1,8 @@
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
+const axios = require('axios'); 
 require('dotenv').config();
-const axios = require('axios');
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
-});
-
-const TOKEN = process.env.TOKEN;
-
-client.once('ready', () => {
-  console.log(`Bot aktif sebagai ${client.user.tag}`);
-});
-
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 const candaFunction = async () => {
   try {
@@ -61,43 +48,40 @@ const textFunction = async () => {
   }
 };
 
-client.on('messageCreate', async message => {
-  if (message.author.bot) return;
+client.once('ready', () => {
+  console.log(`🤖 Bot ready as ${client.user.tag}`);
+});
 
-  if (message.content === '!text') {
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName } = interaction;
+
+  if (commandName === 'text') {
     const text = await textFunction();
+    await interaction.reply(text || '⚠️ Gagal ambil teks. Coba lagi nanti ya.');
 
-    if (text) {
-      await message.reply(text);
-    } else {
-     await message.reply('⚠️ Gagal ambil teks. Coba lagi nanti ya.');
-    }
-  } else if (message.content === '!jokes') {
+  } else if (commandName === 'jokes') {
     try {
       const imageUrl = await jokesFunction();
       const attachment = new AttachmentBuilder(imageUrl, { name: 'jokesbapak.jpg' });
-      await message.channel.send({
-        content: 'Berikut adalah gambar jokes bapack:',
-        files: [attachment]
-      });
-
+      await interaction.reply({ content: 'Berikut adalah gambar jokes bapack:', files: [attachment] });
     } catch (err) {
       console.error('Error ambil jokes:', err);
-      message.reply('Gagal ambil jokes. Coba lagi nanti ya.');
+      await interaction.reply('Gagal ambil jokes. Coba lagi nanti ya.');
     }
-  } else if (message.content === '!tolong') {
-    message.reply('Gunakan !ping untuk balasan cepat, !jokes untuk mendapatkan gambar jokes, atau !help untuk bantuan.');
-  } else if (message.content === '!inpo') {
-    message.reply('Bot ini dibuat untuk memberikan balasan cepat dan gambar lucu. Gunakan perintah yang tersedia untuk berinteraksi!');
-  } else if (message.content === '!canda') {
-      const imageUrl = await candaFunction();
-      const attachment = new AttachmentBuilder(imageUrl, { name: 'canda.jpg' });
-      await message.channel.send({
-        content: 'Berikut adalah gambar jokes biasa:',
-        files: [attachment]
-      });
+
+  } else if (commandName === 'canda') {
+    const imageUrl = await candaFunction();
+    const attachment = new AttachmentBuilder(imageUrl, { name: 'canda.jpg' });
+    await interaction.reply({ content: 'Berikut adalah gambar jokes biasa:', files: [attachment] });
+
+  } else if (commandName === 'tolong') {
+    await interaction.reply('Gunakan `/text`, `/jokes`, `/canda`, atau `/inpo` untuk mulai.');
+
+  } else if (commandName === 'inpo') {
+    await interaction.reply('Bot ini dibuat untuk memberikan balasan cepat dan gambar lucu. Gunakan slash command untuk berinteraksi!');
   }
 });
 
-client.login(TOKEN);
-
+client.login(process.env.TOKEN);
