@@ -6,7 +6,12 @@ const commands = [
   new SlashCommandBuilder().setName('jokes').setDescription('Menampilkan gambar jokes bapack'),
   new SlashCommandBuilder().setName('tolong').setDescription('Menampilkan bantuan'),
   new SlashCommandBuilder().setName('inpo').setDescription('Menampilkan informasi bot'),
-  new SlashCommandBuilder().setName('canda').setDescription('Menampilkan gambar jokes biasa')
+  new SlashCommandBuilder().setName('canda').setDescription('Menampilkan gambar jokes biasa'),
+  new SlashCommandBuilder().setName('play').setDescription('Memutar musik dari YouTube')
+    .addStringOption(option => option.setName('url').setDescription('URL video YouTube yang ingin diputar').setRequired(true)),
+  new SlashCommandBuilder().setName('stop').setDescription('Menghentikan pemutaran musik'),
+  new SlashCommandBuilder().setName('skip').setDescription('Melewati lagu yang sedang diputar'),
+    
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
