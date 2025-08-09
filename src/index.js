@@ -1,5 +1,12 @@
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require("@discordjs/voice");
+const { 
+  joinVoiceChannel, 
+  createAudioPlayer, 
+  createAudioResource, 
+  AudioPlayerStatus, 
+  VoiceConnectionStatus, 
+  entersState 
+} = require('@discordjs/voice');
 const axios = require('axios');
 const playdl = require("play-dl"); 
 require('dotenv').config();
@@ -17,23 +24,27 @@ let queue = [];
 let player = createAudioPlayer();
 let connection;
 
-const playSong = async (message) => {
+const playSong = async (interaction) => {
   if (!queue.length) {
-    message.channel.send("✅ Daftar lagu kosong, keluar dari voice channel...");
+    await interaction.channel.send("✅ Daftar lagu kosong, keluar dari voice channel...");
     connection.destroy();
     connection = null;
     return;
   }
 
   let song = queue[0];
-  message.channel.send(`🎵 Memutar: **${song.title}**`);
-    
-  let stream = await playdl.stream(song.url);
-  let resource = createAudioResource(stream.stream, { inputType: stream.type });
-    
+  await interaction.channel.send(`🎵 Memutar: **${song.title}**`);
+
+  // Pastikan format aman untuk Discord
+  let stream = await playdl.stream(song.url, { discordPlayerCompatibility: true });
+  let resource = createAudioResource(stream.stream, { 
+    inputType: stream.type,
+    inlineVolume: true 
+  });
+
   player.play(resource);
   connection.subscribe(player);
-}
+};
 
 const candaFunction = async () => {
   try {
@@ -128,21 +139,20 @@ client.on('interactionCreate', async interaction => {
 
       case 'play':
         const url = interaction.options.getString('url');
-        if (!url) {
-          await interaction.reply('URL video YouTube tidak boleh kosong.');
-          return;
-        }
-        if (!interaction.member.voice.channel) {
-          await interaction.reply('Anda harus berada di voice channel untuk memutar musik.');
-          return;
-        }
+        if (!url) return interaction.reply('URL video YouTube tidak boleh kosong.');
+        if (!interaction.member.voice.channel) return interaction.reply('Anda harus berada di voice channel untuk memutar musik.');
+
         if (!connection) {
           connection = joinVoiceChannel({
             channelId: interaction.member.voice.channel.id,
             guildId: interaction.guild.id,
             adapterCreator: interaction.guild.voiceAdapterCreator,
           });
+
+          // Tunggu sampai benar-benar ready
+          await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
         }
+
         const songInfo = await playdl.video_info(url);
         const song = {
           title: songInfo.video_details.title,
@@ -150,6 +160,7 @@ client.on('interactionCreate', async interaction => {
         };
         queue.push(song);
         await interaction.reply(`✅ Lagu **${song.title}** ditambahkan ke antrian.`);
+
         if (player.state.status === AudioPlayerStatus.Idle) {
           playSong(interaction);
         }
