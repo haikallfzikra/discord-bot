@@ -1,12 +1,13 @@
+const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 require('dotenv').config();
-const { REST, Routes } = require('discord.js');
 
 const commands = [
-  {
-    name: 'ping',
-    description: 'Replies with Pong!'
-  }
-];
+  new SlashCommandBuilder().setName('text').setDescription('Menampilkan teks'),
+  new SlashCommandBuilder().setName('jokes').setDescription('Menampilkan gambar jokes bapack'),
+  new SlashCommandBuilder().setName('tolong').setDescription('Menampilkan bantuan'),
+  new SlashCommandBuilder().setName('inpo').setDescription('Menampilkan informasi bot'),
+  new SlashCommandBuilder().setName('canda').setDescription('Menampilkan gambar jokes biasa')
+].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
