@@ -15,6 +15,10 @@ const client = new Client({
 // Setup discord-player
 const player = new Player(client);
 
+(async () => {
+    await player.extractors.loadDefault();
+})();
+
 const candaFunction = async () => {
   try {
     const apiUrl = "https://candaan-api.vercel.app/api/image/random";
