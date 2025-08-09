@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 const { Player } = require('discord-player');
+import { DefaultExtractors } from '@discord-player/extractor';
 const axios = require('axios');
 require('dotenv').config();
 
@@ -16,7 +17,7 @@ const client = new Client({
 const player = new Player(client);
 
 (async () => {
-    await player.extractors.loadDefault();
+    await player.extractors.loadMulti(DefaultExtractors);
 })();
 
 const candaFunction = async () => {
