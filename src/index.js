@@ -1,9 +1,7 @@
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
-const { Player } = require('discord-player');
-const { YoutubeExtractor } = require('@discord-player/youtube');
-const { SpotifyExtractor } = require('@discord-player/spotify');
-const { SoundCloudExtractor } = require('@discord-player/soundcloud');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require("@discordjs/voice");
 const axios = require('axios');
+const playdl = require("play-dl"); 
 require('dotenv').config();
 
 const client = new Client({
@@ -15,144 +13,179 @@ const client = new Client({
   ]
 });
 
-// Setup discord-player
-const player = new Player(client);
+let queue = [];
+let player = createAudioPlayer();
+let connection;
 
-(async () => {
-    await player.extractors.register(YoutubeExtractor, {});
-    await player.extractors.register(SpotifyExtractor, {});
-    await player.extractors.register(SoundCloudExtractor, {});
-})();
+const playSong = async (message) => {
+  if (!queue.length) {
+    message.channel.send("✅ Daftar lagu kosong, keluar dari voice channel...");
+    connection.destroy();
+    connection = null;
+    return;
+  }
+
+  let song = queue[0];
+  message.channel.send(`🎵 Memutar: **${song.title}**`);
+    
+  let stream = await playdl.stream(song.url);
+  let resource = createAudioResource(stream.stream, { inputType: stream.type });
+    
+  player.play(resource);
+  connection.subscribe(player);
+}
 
 const candaFunction = async () => {
   try {
     const apiUrl = "https://candaan-api.vercel.app/api/image/random";
     const response = await axios.get(apiUrl);
-    return response.data.data.url;
+
+    const imageUrl = response.data.data.url;
+
+    return imageUrl;
   } catch (err) {
     console.error('Error ambil jokes:', err);
-    return null;
+    return 'Gagal ambil jokes. Coba lagi nanti ya.';
   }
 };
 
 const jokesFunction = async () => {
   try {
-    return `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
+    const apiUrl = `https://jokesbapak2.reinaldyrafli.com/api/?nocache=${Date.now()}`;
+    return apiUrl;
   } catch (err) {
     console.error('Error ambil jokes:', err);
-    return null;
+    return 'Gagal ambil jokes. Coba lagi nanti ya.';
   }
 };
 
 const textFunction = async () => {
+  const url = 'https://candaan-api.vercel.app/api/text/random';
   try {
-    const response = await axios.get('https://candaan-api.vercel.app/api/text/random');
-    return typeof response.data.data === 'string' ? response.data.data : null;
+    const response = await axios.get(url);
+    const text = response.data.data;
+
+    console.log('Teks yang diambil:', text);
+    
+
+    if (!text || typeof text !== 'string') {
+      return null;
+    }
+
+    return text;
   } catch (err) {
     console.error('Error ambil teks:', err);
     return null;
   }
 };
 
-// ======== Event Ready ========
 client.once('ready', () => {
-  console.log(`🤖 Bot login sebagai ${client.user.tag}`);
+  console.log(`🤖 Bot ready as ${client.user.tag}`);
 });
 
-// ======== Interaction Handler ========
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
+  const { commandName } = interaction;
+
   try {
-    switch (interaction.commandName) {
-      // === Command hiburan ===
+    switch (commandName) {
       case 'text':
         const text = await textFunction();
-        await interaction.reply(text || '❌ Gagal mengambil teks.');
+        if (text) {
+          await interaction.reply(text);
+        } else {
+          await interaction.reply('Gagal mengambil teks. Coba lagi nanti ya.');
+        }
         break;
 
       case 'jokes':
         const jokesUrl = await jokesFunction();
         if (jokesUrl) {
-          await interaction.reply({ files: [new AttachmentBuilder(jokesUrl)] });
+          const attachment = new AttachmentBuilder(jokesUrl);
+          await interaction.reply({ files: [attachment] });
         } else {
-          await interaction.reply('❌ Gagal mengambil gambar jokes.');
+          await interaction.reply('Gagal mengambil gambar jokes. Coba lagi nanti ya.');
         }
+        break;
+      case 'tolong':
+        await interaction.reply('Gunakan perintah `/text`, `/jokes`, atau `/canda` untuk berinteraksi dengan bot ini.');
+        break;
+
+      case 'inpo':
+        await interaction.reply('Bot ini dibuat untuk memberikan hiburan dengan teks dan gambar jokes. Gunakan perintah `/text`, `/jokes`, atau `/canda` untuk berinteraksi.');
         break;
 
       case 'canda':
         const candaImage = await candaFunction();
         if (candaImage) {
-          await interaction.reply({ files: [new AttachmentBuilder(candaImage)] });
+          const attachment = new AttachmentBuilder(candaImage);
+          await interaction.reply({ files: [attachment] });
         } else {
-          await interaction.reply('❌ Gagal mengambil gambar canda.');
+          await interaction.reply('Gagal mengambil gambar canda. Coba lagi nanti ya.');
         }
         break;
 
-      case 'tolong':
-        await interaction.reply('Gunakan `/text`, `/jokes`, `/canda`, `/play`, `/skip`, `/stop`.');
-        break;
-
-      case 'inpo':
-        await interaction.reply('Bot hiburan & musik 🎵. Gunakan `/text`, `/jokes`, `/canda`, `/play`.');
-        break;
-
-      // === Command musik ===
       case 'play':
-          const query = interaction.options.getString('url');
-          if (!query) return interaction.reply('❌ Masukkan URL atau nama lagu.');
-      
-          if (!interaction.member.voice.channel) {
-              return interaction.reply('❌ Kamu harus berada di voice channel.');
-          }
-        
-          await interaction.deferReply();
-        
-          const searchResult = await player.search(query, {
-              requestedBy: interaction.user
+        const url = interaction.options.getString('url');
+        if (!url) {
+          await interaction.reply('URL video YouTube tidak boleh kosong.');
+          return;
+        }
+        if (!interaction.member.voice.channel) {
+          await interaction.reply('Anda harus berada di voice channel untuk memutar musik.');
+          return;
+        }
+        if (!connection) {
+          connection = joinVoiceChannel({
+            channelId: interaction.member.voice.channel.id,
+            guildId: interaction.guild.id,
+            adapterCreator: interaction.guild.voiceAdapterCreator,
           });
+        }
+        const songInfo = await playdl.video_info(url);
+        const song = {
+          title: songInfo.video_details.title,
+          url: songInfo.video_details.url,
+        };
+        queue.push(song);
+        await interaction.reply(`✅ Lagu **${song.title}** ditambahkan ke antrian.`);
+        if (player.state.status === AudioPlayerStatus.Idle) {
+          playSong(interaction);
+        }
+        break;
         
-          if (!searchResult || !searchResult.tracks.length) {
-              return interaction.editReply('❌ Lagu tidak ditemukan.');
-          }
-        
-          const queue = player.nodes.create(interaction.guild, {
-              metadata: interaction.channel
-          });
-
-          try {
-              if (!queue.connection) await queue.connect(interaction.member.voice.channel);
-          } catch {
-              queue.delete();
-              return interaction.editReply('❌ Gagal masuk ke voice channel.');
-          }
-          queue.addTrack(searchResult.tracks[0]);
-          if (!queue.isPlaying()) await queue.node.play();
-          return interaction.editReply(`✅ Ditambahkan ke antrian: **${searchResult.tracks[0].title}**`);
+      case 'stop':
+        if (connection) {
+          connection.destroy();
+          connection = null;
+          queue = [];
+          await interaction.reply('✅ Musik dihentikan dan keluar dari voice channel.');
+        } else {
+          await interaction.reply('Tidak ada musik yang sedang diputar.');
+        }
+        break;
 
       case 'skip':
-        const currentQueue = player.getQueue(interaction.guild.id);
-        if (!currentQueue) return interaction.reply('❌ Tidak ada musik yang sedang diputar.');
-        currentQueue.skip();
-        interaction.reply('⏭ Lagu dilewati.');
+        if (queue.length > 0) {
+          queue.shift();
+          await interaction.reply('✅ Lagu saat ini dilewati.');
+          if (player.state.status !== AudioPlayerStatus.Playing) {
+            playSong(interaction);
+          }
+        }
+        else {
+          await interaction.reply('Tidak ada lagu yang sedang diputar.');
+        }
         break;
-
-      case 'stop':
-        const stopQueue = player.getQueue(interaction.guild.id);
-        if (!stopQueue) return interaction.reply('❌ Tidak ada musik yang sedang diputar.');
-        stopQueue.destroy();
-        interaction.reply('⏹ Musik dihentikan.');
-        break;
-
+        
       default:
-        interaction.reply('❌ Perintah tidak dikenali.');
+        await interaction.reply('Perintah tidak dikenali. Gunakan `/tolong` untuk bantuan.');
         break;
-    }
+  }
   } catch (error) {
-    console.error(error);
-    if (!interaction.replied) {
-      interaction.reply('⚠️ Terjadi kesalahan saat memproses perintah.');
-    }
+    console.error('Error handling interaction:', error);
+    await interaction.reply('Terjadi kesalahan saat memproses perintah. Coba lagi nanti ya.');
   }
 });
 
