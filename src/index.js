@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 const { Player } = require('discord-player');
-import { DefaultExtractors } from '@discord-player/extractor';
+const { DefaultExtractors } = require('@discord-player/extractor');
+
 const axios = require('axios');
 require('dotenv').config();
 
