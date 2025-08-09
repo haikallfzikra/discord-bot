@@ -24,27 +24,53 @@ let queue = [];
 let player = createAudioPlayer();
 let connection;
 
-const playSong = async (interaction) => {
+async function playSong(interaction) {
   if (!queue.length) {
     await interaction.channel.send("✅ Daftar lagu kosong, keluar dari voice channel...");
-    connection.destroy();
-    connection = null;
+    if (connection) {
+      connection.destroy();
+      connection = null;
+    }
     return;
   }
 
   let song = queue[0];
+
+  if (!song.url || !/^https?:\/\//.test(song.url)) {
+    await interaction.channel.send(`❌ Lagu "${song.title || 'Tanpa Judul'}" punya URL tidak valid, skip...`);
+    queue.shift();
+    return playSong(interaction);
+  }
+
   await interaction.channel.send(`🎵 Memutar: **${song.title}**`);
 
-  // Pastikan format aman untuk Discord
-  let stream = await playdl.stream(song.url, { discordPlayerCompatibility: true });
-  let resource = createAudioResource(stream.stream, { 
-    inputType: stream.type,
-    inlineVolume: true 
-  });
+  try {
+    let stream = await playdl.stream(song.url, { discordPlayerCompatibility: true });
+    let resource = createAudioResource(stream.stream, { 
+      inputType: stream.type,
+      inlineVolume: true 
+    });
 
-  player.play(resource);
-  connection.subscribe(player);
-};
+    player.play(resource);
+    connection.subscribe(player);
+  } catch (err) {
+    console.error('❌ Error saat memutar lagu:', err);
+    await interaction.channel.send(`❌ Gagal memutar lagu "${song.title}", skip...`);
+    queue.shift();
+    return playSong(interaction);
+  }
+}
+
+player.on(AudioPlayerStatus.Idle, () => {
+  if (queue.length > 0) {
+    queue.shift();
+    if (queue.length > 0) {
+      playSong(lastInteraction);
+    }
+  }
+});
+
+let lastInteraction = null;
 
 const candaFunction = async () => {
   try {
@@ -137,22 +163,29 @@ client.on('interactionCreate', async interaction => {
         }
         break;
 
-      case 'play':
-        const url = interaction.options.getString('url');
-        if (!url) return interaction.reply('URL video YouTube tidak boleh kosong.');
-        if (!interaction.member.voice.channel) return interaction.reply('Anda harus berada di voice channel untuk memutar musik.');
-
-        if (!connection) {
-          connection = joinVoiceChannel({
-            channelId: interaction.member.voice.channel.id,
-            guildId: interaction.guild.id,
-            adapterCreator: interaction.guild.voiceAdapterCreator,
-          });
-
-          // Tunggu sampai benar-benar ready
-          await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
-        }
-
+    case 'play':
+      const url = interaction.options.getString('url');
+      if (!url || !/^https?:\/\//.test(url)) {
+        return interaction.reply('❌ URL tidak valid. Pastikan formatnya lengkap, contoh: https://youtu.be/...');
+      }
+    
+      lastInteraction = interaction; // simpan interaction terakhir
+    
+      if (!interaction.member.voice.channel) {
+        return interaction.reply('❌ Anda harus berada di voice channel untuk memutar musik.');
+      }
+    
+      if (!connection) {
+        connection = joinVoiceChannel({
+          channelId: interaction.member.voice.channel.id,
+          guildId: interaction.guild.id,
+          adapterCreator: interaction.guild.voiceAdapterCreator,
+        });
+      
+        await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
+      }
+    
+      try {
         const songInfo = await playdl.video_info(url);
         const song = {
           title: songInfo.video_details.title,
@@ -160,11 +193,15 @@ client.on('interactionCreate', async interaction => {
         };
         queue.push(song);
         await interaction.reply(`✅ Lagu **${song.title}** ditambahkan ke antrian.`);
-
+      
         if (player.state.status === AudioPlayerStatus.Idle) {
           playSong(interaction);
         }
-        break;
+      } catch (err) {
+        console.error('❌ Gagal ambil info video:', err);
+        await interaction.reply('❌ Gagal mengambil informasi lagu dari URL tersebut.');
+      }
+      break;
         
       case 'stop':
         if (connection) {
