@@ -1,11 +1,8 @@
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 const { Player } = require('discord-player');
-const { DefaultExtractors } = require('@discord-player/extractor');
-
-// Plugins
 const { YoutubeExtractor } = require('@discord-player/youtube');
 const { SpotifyExtractor } = require('@discord-player/spotify');
-
+const { SoundCloudExtractor } = require('@discord-player/soundcloud');
 const axios = require('axios');
 require('dotenv').config();
 
@@ -24,6 +21,7 @@ const player = new Player(client);
 (async () => {
     await player.extractors.register(YoutubeExtractor, {});
     await player.extractors.register(SpotifyExtractor, {});
+    await player.extractors.register(SoundCloudExtractor, {});
 })();
 
 const candaFunction = async () => {
