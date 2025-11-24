@@ -26,7 +26,7 @@ let connection;
 
 async function playSong(interaction) {
   if (!queue.length) {
-    await interaction.channel.send("✅ Daftar lagu kosong, keluar dari voice channel...");
+    await interaction.channel.send("Daftar lagu kosong, keluar dari voice channel...");
     if (connection) {
       connection.destroy();
       connection = null;
@@ -37,12 +37,12 @@ async function playSong(interaction) {
   let song = queue[0];
 
   if (!song.url || !/^https?:\/\//.test(song.url)) {
-    await interaction.channel.send(`❌ Lagu "${song.title || 'Tanpa Judul'}" punya URL tidak valid, skip...`);
+    await interaction.channel.send(`Lagu "${song.title || 'Tanpa Judul'}" punya URL tidak valid, skip...`);
     queue.shift();
     return playSong(interaction);
   }
 
-  await interaction.channel.send(`🎵 Memutar: **${song.title}**`);
+  await interaction.channel.send(`Memutar: **${song.title}**`);
 
   try {
     let stream = await playdl.stream(song.url, { discordPlayerCompatibility: true });
@@ -54,8 +54,8 @@ async function playSong(interaction) {
     player.play(resource);
     connection.subscribe(player);
   } catch (err) {
-    console.error('❌ Error saat memutar lagu:', err);
-    await interaction.channel.send(`❌ Gagal memutar lagu "${song.title}", skip...`);
+    console.error('Error saat memutar lagu:', err);
+    await interaction.channel.send(`Gagal memutar lagu "${song.title}", skip...`);
     queue.shift();
     return playSong(interaction);
   }
@@ -117,7 +117,7 @@ const textFunction = async () => {
 };
 
 client.once('ready', () => {
-  console.log(`🤖 Bot ready as ${client.user.tag}`);
+  console.log(`Bot ready as ${client.user.tag}`);
 });
 
 client.on('interactionCreate', async interaction => {
@@ -166,13 +166,13 @@ client.on('interactionCreate', async interaction => {
     case 'play':
       const url = interaction.options.getString('url');
       if (!url || !/^https?:\/\//.test(url)) {
-        return interaction.reply('❌ URL tidak valid. Pastikan formatnya lengkap, contoh: https://youtu.be/...');
+        return interaction.reply('URL tidak valid. Pastikan formatnya lengkap, contoh: https://youtu.be/...');
       }
     
-      lastInteraction = interaction; // simpan interaction terakhir
+      lastInteraction = interaction;
     
       if (!interaction.member.voice.channel) {
-        return interaction.reply('❌ Anda harus berada di voice channel untuk memutar musik.');
+        return interaction.reply('Anda harus berada di voice channel untuk memutar musik.');
       }
     
       if (!connection) {
@@ -192,14 +192,14 @@ client.on('interactionCreate', async interaction => {
           url: songInfo.video_details.url,
         };
         queue.push(song);
-        await interaction.reply(`✅ Lagu **${song.title}** ditambahkan ke antrian.`);
+        await interaction.reply(`Lagu **${song.title}** ditambahkan ke antrian.`);
       
         if (player.state.status === AudioPlayerStatus.Idle) {
           playSong(interaction);
         }
       } catch (err) {
-        console.error('❌ Gagal ambil info video:', err);
-        await interaction.reply('❌ Gagal mengambil informasi lagu dari URL tersebut.');
+        console.error('Gagal ambil info video:', err);
+        await interaction.reply('Gagal mengambil informasi lagu dari URL tersebut.');
       }
       break;
         
@@ -208,7 +208,7 @@ client.on('interactionCreate', async interaction => {
           connection.destroy();
           connection = null;
           queue = [];
-          await interaction.reply('✅ Musik dihentikan dan keluar dari voice channel.');
+          await interaction.reply('Musik dihentikan dan keluar dari voice channel.');
         } else {
           await interaction.reply('Tidak ada musik yang sedang diputar.');
         }
@@ -217,7 +217,7 @@ client.on('interactionCreate', async interaction => {
       case 'skip':
         if (queue.length > 0) {
           queue.shift();
-          await interaction.reply('✅ Lagu saat ini dilewati.');
+          await interaction.reply('Lagu saat ini dilewati.');
           if (player.state.status !== AudioPlayerStatus.Playing) {
             playSong(interaction);
           }
